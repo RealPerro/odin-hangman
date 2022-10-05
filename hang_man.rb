@@ -1,7 +1,20 @@
 require 'pry-byebug' # binding.pry
 
+module GameUtils
+  def save_game(obj)
+    puts 'savng game...'
+  end
+
+  def load_game()
+    puts 'loading game...'
+  end
+end
+
+
+
 class HangGame
-  
+  include GameUtils
+
   def self.read_dictionary(file_name = 'words.txt')
     available_words = File.readlines(file_name)
   end
@@ -16,13 +29,13 @@ class HangGame
 
   def initialize(player)
     @player = player
-    @tries_left = 6
     @game_state = 'started'
     @secret_word = select_word.split('')
     @word_mask = '*' * @secret_word.length
     @word_mask = @word_mask.split('')
     @already_guessed = []
     @guess = ''
+    @tries_left = 5
   end
 
   
@@ -36,9 +49,18 @@ class HangGame
   def play_letter
     result = 'started'
     @guess = gets[0].to_s.downcase
+    if @guess == '1'
+      save_game(self)
+      @game_state = 'saved' 
+    elsif @guess == '2'
+      load_game()
+      @game_state = 'loaded'
+    end
+
     @already_guessed.push(@guess)
     @tries_left -= 1
     if @secret_word.include?(@guess)
+      @tries_left += 1
       update_mask
     end
     @game_state = 'finished' if @tries_left == 0
@@ -67,7 +89,7 @@ class HangGame
     puts ''
     puts "You already tried #{@already_guessed}"
     puts ''
-    puts 'Please guess a letter...'
+    puts 'Please guess a letter... OR! if you want to save the game enter <1>. To load a saved game press <2>'
     #test_report
   end
 
