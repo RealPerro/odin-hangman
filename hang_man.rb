@@ -23,6 +23,7 @@ class HangGame
     @already_guessed = []
     @guess = ''
     @tries_left = 5
+    @message = ''
   end
 
   def to_json
@@ -61,9 +62,10 @@ class HangGame
     puts 'loading game...'
     begin
       game_data = File.read(file_name)
+      from_json(game_data)
     rescue
       @message = "No file to load for this player."
-    from_json(game_data)
+    end
 
   end
 
@@ -84,6 +86,7 @@ class HangGame
       load_game
       @game_state = 'started'
     else
+      @message = ''
       @already_guessed.push(@guess)
       @tries_left -= 1
       if @secret_word.include?(@guess)
@@ -104,7 +107,7 @@ class HangGame
   def display_game
     system ('clear')
     puts "This is Ruby Hangman. Game state = #{@game_state}"
-    puts "Hey #{@player}!, you have #{@tries_left} guesses left."
+    puts "Hey #{@player}!, you have #{@tries_left} guesses left. #{@message}"
     puts "#{'-' * ((@secret_word.length - 4) / 2)}Word#{'-' * ((@secret_word.length - 4) / 2)}"
     puts "#{@word_mask.join('')}"
     puts puts '-' * @secret_word.length
@@ -131,7 +134,7 @@ class HangGame
 
 end
 
-game = HangGame.new("chr")
+game = HangGame.new("ger")
 game.play
 
 
