@@ -1,24 +1,11 @@
 require 'pry-byebug' # binding.pry
-
-module GameUtils
-  def save_game(obj)
-    puts 'savng game...'
-  end
-
-  def load_game()
-    puts 'loading game...'
-  end
-end
-
-
+require 'json'
 
 class HangGame
-  include GameUtils
 
   def self.read_dictionary(file_name = 'words.txt')
     available_words = File.readlines(file_name)
   end
-
 
   def select_word(min_size = 5, max_size = 12, dictionary = @@dictionary)
     possible_words = @@dictionary.select { |word| word.length.between?(min_size, max_size)}
@@ -28,7 +15,7 @@ class HangGame
   @@dictionary = self.read_dictionary()
 
   def initialize(player)
-    @player = player
+    @player = player.to_s
     @game_state = 'started'
     @secret_word = select_word.split('')
     @word_mask = '*' * @secret_word.length
@@ -38,30 +25,71 @@ class HangGame
     @tries_left = 5
   end
 
+  def to_json
+    JSON.dump({
+    :player => @player,
+    :game_state => @game_state,
+    :secret_word => @secret_word,
+    :word_mask => @word_mask,
+    :already_guessed => @already_guessed,
+    :tries_left => @tries_left
+    })
+  end
   
+  def from_json(string)
+    data = JSON.load(string)
+    @player = data['player']
+    @game_state = data['game_state']
+    @secret_word = data['secret_word']
+    @word_mask = data['word_mask']
+    @already_guessed = data['already_guessed']
+    @guess = ''
+    @tries_left = data['tries_left']
+  end
+
+  def save_game
+    puts 'saving game...'
+    Dir.mkdir('saved_games') unless Dir.exist?('saved_games')
+    file_name = "saved_games/#{@player}"
+    File.open(file_name, 'w') do |file|
+      file.puts to_json
+    end
+  end
+
+  def load_game
+    file_name = "saved_games/#{@player}"
+    puts 'loading game...'
+    begin
+      game_data = File.read(file_name)
+    rescue
+      @message = "No file to load for this player."
+    from_json(game_data)
+
+  end
+
   def test_report
     puts "word mask count = #{@word_mask.count('*')}"
     puts "secret word = #{@secret_word}"
     puts "guess = #{@guess}"
   end
 
-
   def play_letter
     result = 'started'
     @guess = gets[0].to_s.downcase
-    if @guess == '1'
-      save_game(self)
-      @game_state = 'saved' 
-    elsif @guess == '2'
-      load_game()
-      @game_state = 'loaded'
-    end
 
-    @already_guessed.push(@guess)
-    @tries_left -= 1
-    if @secret_word.include?(@guess)
-      @tries_left += 1
-      update_mask
+    if @guess == '1'
+      save_game
+      @game_state = 'saved'
+    elsif @guess == '2'
+      load_game
+      @game_state = 'started'
+    else
+      @already_guessed.push(@guess)
+      @tries_left -= 1
+      if @secret_word.include?(@guess)
+        @tries_left += 1
+        update_mask
+      end
     end
     @game_state = 'finished' if @tries_left == 0
     @game_state = 'finished' if @word_mask.count('*') == 0
@@ -90,10 +118,10 @@ class HangGame
     puts "You already tried #{@already_guessed}"
     puts ''
     puts 'Please guess a letter... OR! if you want to save the game enter <1>. To load a saved game press <2>'
-    #test_report
   end
 
   def play
+    puts "Please enter your name"
     while @game_state == 'started'
       display_game
       play_letter
