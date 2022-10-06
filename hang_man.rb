@@ -7,7 +7,7 @@ class HangGame
     available_words = File.readlines(file_name)
   end
 
-  def select_word(min_size = 5, max_size = 12, dictionary = @@dictionary)
+  def select_word(min_size = 6, max_size = 12, dictionary = @@dictionary)
     possible_words = @@dictionary.select { |word| word.length.between?(min_size, max_size)}
     secret_word = possible_words.sample.chomp
   end
@@ -58,7 +58,7 @@ class HangGame
   end
 
   def load_game
-    file_name = "saved_games/#{@player}"
+    file_name = "saved_games/#{@player}.json"
     puts 'loading game...'
     begin
       game_data = File.read(file_name)
@@ -66,13 +66,6 @@ class HangGame
     rescue
       @message = "No file to load for this player."
     end
-
-  end
-
-  def test_report
-    puts "word mask count = #{@word_mask.count('*')}"
-    puts "secret word = #{@secret_word}"
-    puts "guess = #{@guess}"
   end
 
   def play_letter
