@@ -51,7 +51,7 @@ class HangGame
   def save_game
     puts 'saving game...'
     Dir.mkdir('saved_games') unless Dir.exist?('saved_games')
-    file_name = "saved_games/#{@player}"
+    file_name = "saved_games/#{@player}.json"
     File.open(file_name, 'w') do |file|
       file.puts to_json
     end
